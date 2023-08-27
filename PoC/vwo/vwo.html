@@ -1,0 +1,28 @@
+<html>
+
+<head>
+    <title>Test</title>
+    <script>
+        window.addEventListener('message', function (event) {
+            console.log("event " + JSON.stringify(event.data));
+            const res = document.getElementById("result")
+            const parsed = event.data;
+            if (parsed["wingify_push_subscription_status"] == "") {
+                res.innerText = "User did not visit/accept notifications on website \n"+JSON.stringify(parsed)
+            } else {
+                res.innerText = "User did visit and accept notifications on website \n"+JSON.stringify(parsed)
+            }
+        }, !1)
+        async function test() {
+            popup = window.open("https://YOURSUBDOMAIN.pushcrew.com/?action=subscribe", '_blank', 'toolbar=no,status=no,menubar=no,scrollbars=no,resizable=no, width=10, height=10, visible=none', '');
+        }
+        test();
+    </script>
+</head>
+
+<body>This is a test<br>
+
+    <div id="result"></div>
+</body>
+
+</html>

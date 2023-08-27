@@ -1,0 +1,19 @@
+<html>
+    <head><title>Test</title><script>
+        window.addEventListener('message', function(event) {
+            console.log(event)
+            if (event.origin == "https://letreach.com" || event.origin == "https://YOURSUBDOMAIN.letreach.com" || event.origin == "https://YOURSUBDOMAIN.ltrch.com") {
+                console.log("event " + event.data);
+                const res = document.getElementById("result")
+                if(event.data.length==1){
+                    res.innerText="User did not visit/accept notifications on website"
+                }else{
+                    res.innerText="User did visit and accept notifications on website"
+                }
+            }
+        }, !1)
+    </script></head>
+    <body>This is a test<br>
+    <iframe src="https://YOURSUBDOMAIN.letreach.com/ask.html?checkPermission=1" visibility="hidden" style="width: 0px; height: 0px; border: 0px; display: none;"></iframe>
+    <div id="result"></div></body>
+</html>

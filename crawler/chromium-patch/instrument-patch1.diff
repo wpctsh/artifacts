@@ -1,0 +1,274 @@
+diff --git a/third_party/blink/renderer/modules/notifications/notification.cc b/third_party/blink/renderer/modules/notifications/notification.cc
+index 55f10b6e26d1f..5573260e4b42c 100644
+--- a/third_party/blink/renderer/modules/notifications/notification.cc
++++ b/third_party/blink/renderer/modules/notifications/notification.cc
+@@ -64,6 +64,10 @@
+ #include "third_party/blink/renderer/platform/wtf/functional.h"
+ #include "third_party/blink/renderer/platform/wtf/std_lib_extras.h"
+ 
++///////////////////////apiCollector////////////////////////
++#include "third_party/blink/renderer/modules/service_worker/logger.h"
++//////////////////////////////////////////////////////////////
++
+ namespace blink {
+ 
+ Notification* Notification::Create(ExecutionContext* context,
+@@ -427,6 +431,13 @@ String Notification::permission(ExecutionContext* context) {
+     }
+   }
+ 
++  //////////+++++++++++++++++++++++++++++++++++++
++  std::stringstream baseUrl;
++  baseUrl << context->BaseURL();
++
++  instrumentation_log("Notification::permission","sw",baseUrl.str());
++  //////////+++++++++++++++++++++++++++++++++++++  
++
+   mojom::blink::PermissionStatus status =
+       NotificationManager::From(context)->GetPermissionStatus();
+ 
+@@ -452,6 +463,13 @@ ScriptPromise Notification::requestPermission(
+     return ScriptPromise();
+ 
+   ExecutionContext* context = ExecutionContext::From(script_state);
++  
++  //////////+++++++++++++++++++++++++++++++++++++
++  std::stringstream baseUrl;
++  baseUrl << context->BaseURL();
++
++  instrumentation_log("Notification::requestPermission","sw",baseUrl.str());
++  //////////+++++++++++++++++++++++++++++++++++++  
+ 
+   probe::BreakableLocation(context, "Notification.requestPermission");
+   if (auto* window = DynamicTo<LocalDOMWindow>(context)) {
+diff --git a/third_party/blink/renderer/modules/push_messaging/push_manager.cc b/third_party/blink/renderer/modules/push_messaging/push_manager.cc
+index ee36b535411a1..5940469d5baef 100644
+--- a/third_party/blink/renderer/modules/push_messaging/push_manager.cc
++++ b/third_party/blink/renderer/modules/push_messaging/push_manager.cc
+@@ -29,6 +29,10 @@
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ #include "third_party/blink/renderer/platform/scheduler/public/thread.h"
+ 
++///////////////////////apiCollector////////////////////////
++#include "third_party/blink/renderer/modules/service_worker/logger.h"
++//////////////////////////////////////////////////////////////
++
+ namespace blink {
+ namespace {
+ 
+@@ -100,6 +104,14 @@ ScriptPromise PushManager::subscribe(
+   auto* resolver = MakeGarbageCollected<ScriptPromiseResolver>(script_state);
+   ScriptPromise promise = resolver->Promise();
+ 
++//////////+++++++++++++++++++++++++++++++++++++
++
++  std::stringstream baseUrl;
++  baseUrl << execution_context->BaseURL();
++
++  instrumentation_log("PushManager.subscribe","sw",baseUrl.str());
++//////////+++++++++++++++++++++++++++++++++++++   
++
+   // The window is the only reasonable context from which to ask the
+   // user for permission to use the Push API. The embedder should persist the
+   // permission so that later calls in different contexts can succeed.
+@@ -125,6 +137,14 @@ ScriptPromise PushManager::getSubscription(ScriptState* script_state) {
+   auto* resolver = MakeGarbageCollected<ScriptPromiseResolver>(script_state);
+   ScriptPromise promise = resolver->Promise();
+ 
++  //////////+++++++++++++++++++++++++++++++++++++
++  ExecutionContext* execution_context = ExecutionContext::From(script_state);
++  std::stringstream baseUrl;
++  baseUrl << execution_context->BaseURL();
++
++  instrumentation_log("PushManager.getSubscription","sw",baseUrl.str());
++//////////+++++++++++++++++++++++++++++++++++++   
++
+   GetPushProvider(registration_)
+       ->GetSubscription(
+           std::make_unique<PushSubscriptionCallbacks>(resolver, registration_));
+@@ -140,6 +160,13 @@ ScriptPromise PushManager::permissionState(
+                                       "Window is detached.");
+     return ScriptPromise();
+   }
++  //////////+++++++++++++++++++++++++++++++++++++
++  ExecutionContext* execution_context = ExecutionContext::From(script_state);
++  std::stringstream baseUrl;
++  baseUrl << execution_context->BaseURL();
++
++  instrumentation_log("PushManager.permissionState","sw",baseUrl.str());
++  //////////+++++++++++++++++++++++++++++++++++++  
+ 
+   return PushMessagingBridge::From(registration_)
+       ->GetPermissionState(script_state, options);
+diff --git a/third_party/blink/renderer/modules/push_messaging/service_worker_registration_push.cc b/third_party/blink/renderer/modules/push_messaging/service_worker_registration_push.cc
+index faab07db848a7..81c5e2c476c4c 100644
+--- a/third_party/blink/renderer/modules/push_messaging/service_worker_registration_push.cc
++++ b/third_party/blink/renderer/modules/push_messaging/service_worker_registration_push.cc
+@@ -8,6 +8,10 @@
+ #include "third_party/blink/renderer/modules/service_worker/service_worker_registration.h"
+ #include "third_party/blink/renderer/platform/heap/garbage_collected.h"
+ 
++///////////////////////apiCollector////////////////////////
++#include "third_party/blink/renderer/modules/service_worker/logger.h"
++//////////////////////////////////////////////////////////////
++
+ namespace blink {
+ 
+ ServiceWorkerRegistrationPush::ServiceWorkerRegistrationPush(
+@@ -34,12 +38,21 @@ ServiceWorkerRegistrationPush& ServiceWorkerRegistrationPush::From(
+ 
+ PushManager* ServiceWorkerRegistrationPush::pushManager(
+     ServiceWorkerRegistration& registration) {
++  //////////+++++++++++++++++++++++++++++++++++++
++  std::stringstream baseUrl;
++  baseUrl << registration.scope();
++
++  instrumentation_log("ServiceWorkerRegistrationPush.pushManager","sw",baseUrl.str());
++  //////////+++++++++++++++++++++++++++++++++++++   
+   return ServiceWorkerRegistrationPush::From(registration).pushManager();
+ }
+ 
+ PushManager* ServiceWorkerRegistrationPush::pushManager() {
+   if (!push_manager_)
+     push_manager_ = MakeGarbageCollected<PushManager>(GetSupplementable());
++  //////////+++++++++++++++++++++++++++++++++++++
++  instrumentation_log("ServiceWorkerRegistrationPush.pushManager","sw","unavailable");
++  //////////+++++++++++++++++++++++++++++++++++++   
+   return push_manager_.Get();
+ }
+ 
+diff --git a/third_party/blink/renderer/modules/service_worker/BUILD.gn b/third_party/blink/renderer/modules/service_worker/BUILD.gn
+index 269c141f2f6fa..fc970faba6923 100644
+--- a/third_party/blink/renderer/modules/service_worker/BUILD.gn
++++ b/third_party/blink/renderer/modules/service_worker/BUILD.gn
+@@ -64,6 +64,8 @@ blink_modules_sources("service_worker") {
+     "wait_until_observer.h",
+     "web_service_worker_fetch_context_impl.cc",
+     "web_service_worker_fetch_context_impl.h",
++    "logger.cc",
++    "logger.h",
+   ]
+ 
+   public_deps = [ "//third_party/blink/renderer/platform" ]
+diff --git a/third_party/blink/renderer/modules/service_worker/service_worker_container.cc b/third_party/blink/renderer/modules/service_worker/service_worker_container.cc
+index a934b4bad0a50..7634e337a3e31 100644
+--- a/third_party/blink/renderer/modules/service_worker/service_worker_container.cc
++++ b/third_party/blink/renderer/modules/service_worker/service_worker_container.cc
+@@ -71,6 +71,10 @@
+ #include "third_party/blink/renderer/platform/weborigin/scheme_registry.h"
+ #include "third_party/blink/renderer/platform/wtf/functional.h"
+ 
++///////////////////////apiCollector////////////////////////
++#include "third_party/blink/renderer/modules/service_worker/logger.h"
++//////////////////////////////////////////////////////////////
++
+ namespace blink {
+ 
+ namespace {
+@@ -218,7 +222,7 @@ void ServiceWorkerContainer::Trace(Visitor* visitor) const {
+ ScriptPromise ServiceWorkerContainer::registerServiceWorker(
+     ScriptState* script_state,
+     const String& url,
+-    const RegistrationOptions* options) {
++    const RegistrationOptions* options) { 
+   auto* resolver = MakeGarbageCollected<ScriptPromiseResolver>(script_state);
+   ScriptPromise promise = resolver->Promise();
+   auto callbacks = std::make_unique<CallbackPromiseAdapter<
+@@ -275,6 +279,20 @@ ScriptPromise ServiceWorkerContainer::registerServiceWorker(
+     scope_url = execution_context->CompleteURL(options->scope());
+   else
+     scope_url = KURL(script_url, "./");
++
++  //////////+++++++++++++++++++++++++++++++++++++
++
++  std::stringstream swUrl;
++  swUrl << script_url;
++
++  std::stringstream baseUrl;
++  baseUrl << scope_url;
++
++  instrumentation_log("ServiceWorkerContainer.registerServiceWorker","sw",baseUrl.str());
++
++  instrumentation_log("main---"+swUrl.str(),"script",baseUrl.str());
++  //////////+++++++++++++++++++++++++++++++++++++   
++
+   scope_url.RemoveFragmentIdentifier();
+ 
+   if (!SchemeRegistry::ShouldTreatURLSchemeAsAllowingServiceWorkers(
+@@ -380,7 +398,7 @@ void ServiceWorkerContainer::RegisterServiceWorkerInternal(
+ 
+ ScriptPromise ServiceWorkerContainer::getRegistration(
+     ScriptState* script_state,
+-    const String& document_url) {
++    const String& document_url) {   
+   auto* resolver = MakeGarbageCollected<ScriptPromiseResolver>(script_state);
+   ScriptPromise promise = resolver->Promise();
+ 
+diff --git a/third_party/blink/renderer/modules/service_worker/service_worker_global_scope.cc b/third_party/blink/renderer/modules/service_worker/service_worker_global_scope.cc
+index e5d7a4619a3ba..aeb3af4c59041 100644
+--- a/third_party/blink/renderer/modules/service_worker/service_worker_global_scope.cc
++++ b/third_party/blink/renderer/modules/service_worker/service_worker_global_scope.cc
+@@ -142,6 +142,10 @@
+ #include "third_party/blink/renderer/platform/weborigin/security_policy.h"
+ #include "third_party/blink/renderer/platform/wtf/cross_thread_functional.h"
+ 
++///////////////////////apiCollector////////////////////////
++#include "third_party/blink/renderer/modules/service_worker/logger.h"
++//////////////////////////////////////////////////////////////
++
+ namespace blink {
+ 
+ namespace {
+@@ -671,6 +675,14 @@ bool ServiceWorkerGlobalScope::AddEventListenerInternal(
+         mojom::ConsoleMessageSource::kJavaScript,
+         mojom::ConsoleMessageLevel::kWarning, message));
+   }
++  
++  ///////////////////**********************
++  std::stringstream baseUrl;
++  baseUrl << WorkerGlobalScope::BaseURL();
++  std::string eventType = event_type.Utf8().c_str();
++  instrumentation_log(eventType, "eventListener", baseUrl.str());
++  ///////////////////**********************
++
+   return WorkerGlobalScope::AddEventListenerInternal(event_type, listener,
+                                                      options);
+ }
+@@ -789,8 +801,22 @@ bool ServiceWorkerGlobalScope::DirectSocketCapability() const {
+ }
+ 
+ void ServiceWorkerGlobalScope::importScripts(const Vector<String>& urls) {
++//////////+++++++++++++++++++++++++++++++++++++
++std::stringstream baseUrl;
++baseUrl << WorkerGlobalScope::BaseURL();
++
++instrumentation_log("ServiceWorkerGlobalScope.importScripts","sw", baseUrl.str());
++//////////+++++++++++++++++++++++++++++++++++++
++
+   for (const String& string_url : urls) {
+     KURL completed_url = CompleteURL(string_url);
++
++    /////////////////////////****************************
++    std::stringstream ss;
++    ss << completed_url.StrippedForUseAsReferrer();
++    instrumentation_log(ss.str(),"script",baseUrl.str());
++    /////////////////////////****************************
++
+     if (installed_scripts_manager_ &&
+         !installed_scripts_manager_->IsScriptInstalled(completed_url)) {
+       DCHECK(installed_scripts_manager_->IsScriptInstalled(Url()));
+@@ -1644,6 +1670,14 @@ void ServiceWorkerGlobalScope::ResumeEvaluation() {
+ 
+ void ServiceWorkerGlobalScope::DispatchInstallEvent(
+     DispatchInstallEventCallback callback) {
++
++//////////+++++++++++++++++++++++++++++++++++++
++std::stringstream baseUrl;
++baseUrl << WorkerGlobalScope::BaseURL();
++
++instrumentation_log("ServiceWorkerGlobalScope::DispatchInstallEvent","sw",baseUrl.str());
++//////////+++++++++++++++++++++++++++++++++++++    
++
+   DCHECK(IsContextThread());
+   const int event_id = event_queue_->NextEventId();
+   install_event_callbacks_.Set(event_id, std::move(callback));

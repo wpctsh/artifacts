@@ -1,0 +1,124 @@
+<html>
+
+<head>
+    <title>Test</title>
+    <script>
+        window.addEventListener('message', async function (event) {
+            console.log(event)
+            const data = event.data;
+            const iwindow = document.getElementById('cleverpushframe').contentWindow
+            if (data.penpal) {
+                if (data.penpal == "handshake") {
+                    iwindow.postMessage({ penpal: 'handshake-reply', methodNames: ['onSubscribed'] }, '*')
+                    await new Promise(r => setTimeout(r, 1000));
+                    iwindow.postMessage({
+                        penpal: 'call', id: 1, methodName: 'setConfig', args: [
+                            {
+                                autoRegister: true,
+                                alertTimeout: 1000,
+                                alertMinimumVisits: 0,
+                                loadIframe: true,
+                                trackSessions: true,
+                                loadConfig: false,
+                                environment: 'production',
+                                apiEndpoint: 'https://api.cleverpush.com',
+                                geoipApiEndpoint: 'https://geoip-api.cleverpush.com/',
+                                staticEndpoint: 'https://static.cleverpush.com',
+                                channelId: 'EFBeAFKrgzz5maEiq',
+                                channelName: 'test',
+                                channelIcon: 'https://static.cleverpush.com/app/images/defaultChannelIcon.png',
+                                channelTopics: [],
+                                channelTags: [],
+                                channelEvents: [],
+                                multiChannels: {},
+                                customAttributes: [],
+                                alertScrollPercentage: 0,
+                                confirmAlertTheme: 'cleverpush-confirm-default',
+                                confirmAlertNativeTheme: 'cleverpush-confirm-topbox-below',
+                                confirmAlertBackdrop: true,
+                                confirmAlertBackdropBlur: false,
+                                url: 'https://YOURSUBDOMAIN.cleverpush.com/subscribe',
+                                alertLocalization: {
+                                    info: 'Fuck you!'
+                                },
+                                ownDomain: false,
+                                domain: 'YOURDOMAIN',
+                                subdomain: 'YOURSUBDOMAIN',
+                                cleverpushDomain: 'mycleverpush.com',
+                                vapidPublicKey: 'BBI8Re7GnQyips3hQNbsnMzKVrIej4VKm0EgbHMoI7SzXhTtybDG2ToyauGLAJlrTwzND4zCPBLHvytswi_UKkw',
+                                showConfirmAlert: true,
+                                showConfirmAlertMobile: false,
+                                hideBranding: false,
+                                hideFaqLink: false,
+                                faqUrl: 'https://cleverpush.com/faq',
+                                showNotificationBell: false,
+                                hideNotificationBellMobile: false,
+                                hideNotificationBellSubscribed: false,
+                                serviceWorkerFile: '/cleverpush-worker.js',
+                                safariWebServiceUrl: 'https://api.cleverpush.com/channel/EFBeAFKrgzz5maEiq/safari',
+                                origin: 'https://YOURSUBDOMAIN.cleverpush.com',
+                                pageBannerNotifications: [],
+                                webBanners: [],
+                                widgets: [],
+                                followUpCampaigns: [],
+                                emailOptInForms: [],
+                                notificationCategoryGroups: [],
+                                preventDuplicateEnabled: false,
+                                appDownloadBanner: {},
+                                voucherPools: [],
+                                facebookAppId: '436333683366106',
+                                browserType: 'w3c'
+                            }
+                        ]
+                    }, '*');
+
+                    iwindow.postMessage({ penpal: 'call', id: 2, methodName: 'getTopics', args: [] }, '*')
+                }
+                if (data.penpal == "reply") {
+                    if (data.id == 1) {
+                        iwindow.postMessage({ penpal: 'call', id: 3, methodName: 'isSubscribed', args: [] }, '*');
+                    }
+                    if (data.id == 3) {
+                        document.getElementById("subscribed").innerText = data.returnValue == false ? "User is not subscribed" : "User is subscribed"
+                        if (data.returnValue) {
+                            iwindow.postMessage({ penpal: 'call', id: 4, methodName: 'getSubscriptionId', args: [] }, '*');
+                        }
+                    }
+                    if (data.id == 4) {
+                        document.getElementById("subid").innerText = "subscription ID: " + data.returnValue
+                        iwindow.postMessage({ penpal: 'call', id: 5, methodName: 'getStoredNotifications', args: [] }, '*');
+                    }
+                    if (data.id == 5) {
+                        document.getElementById("notifs").innerText = "List of stored notifications: " + JSON.stringify(data.returnValue)
+                        iwindow.postMessage({ penpal: 'call', id: 6, methodName: 'getClickedNotification', args: [] }, '*');
+                    }
+                    if (data.id == 6) {
+                        document.getElementById("cnotifs").innerText = "List of clicked notifications: " + JSON.stringify(data.returnValue)
+                        document.getElementById("unsub").innerHTML = "<button onClick='unsubscribe()'>unsubscribe</button>";
+                    }
+                    if (data.id==7){
+                        if (data.returnValue) {
+                            document.getElementById("unsub").innerText="Reload!"
+                        }
+                    }
+                }
+            }
+        }, !1)
+        function unsubscribe(){
+            const iwindow = document.getElementById('cleverpushframe').contentWindow
+            iwindow.postMessage({ penpal: 'call', id: 7, methodName: 'unsubscribe', args: [] }, '*');
+        }
+    </script>
+</head>
+<iframe id="cleverpushframe" src="https://YOURSUBDOMAIN.mycleverpush.com/iframe?origin=http%3A%2F%2Flocalhost%3A8089"
+    style="display: none;"></iframe>
+
+<body>This is a test<br>
+    <div id="subscribed"></div>
+    <div id="subid"></div>
+    <div id="notifs"></div>
+    <div id="cnotifs"></div>
+    <div id="unsub"></div>
+</body>
+
+</html>

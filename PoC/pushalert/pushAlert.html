@@ -1,0 +1,12 @@
+<html>
+    <head><title>Test</title><script>
+        window.addEventListener('message', function(event) {
+            console.log(event)
+            const res = document.getElementById("result")
+            res.innerText="User did visit and accept notifications on website"
+        }, !1)
+    </script></head>
+    <body>This is a test<br>
+    <iframe src="https://YOURSUBDOMAIN.pushalert.co/?action=frame-subscribe&segment=0" visibility="hidden" style="width: 0px; height: 0px; border: 0px; display: none;"></iframe>
+    <div id="result">User did not visit/accept notifications on website</div></body>
+</html>

@@ -1,0 +1,20 @@
+<html>
+    <head><title>Test</title><script>
+        window.addEventListener('message', function(event) {
+            console.log(event)
+            console.log("event " + event.data);
+            const res = document.getElementById("result")
+            if(event.data.length==1){
+                res.innerText="User did not visit/accept notifications on website"
+            }else{
+                res.innerText="User did visit and accept notifications on website"
+            }
+        }, !1)
+        window.open("https://YOURSUBDOMAIN.wpush.io/subscribe?public_key=BKuaNiTUHFJAYNi-Sw_2jmlkJWCpWEXgm_c6SLkIuwqC7EveEJKQOMWyJeEoa68DNzWIui2jB6lV1Cf6D7xInoc",'_blank', 'toolbar=no,status=no,menubar=no,scrollbars=no,resizable=no,left=10000, top=10000, width=10, height=10, visible=none', ''); 
+    </script></head>
+    <body>This is a test<br>
+    <div id="result"></div></body>
+</html>
+
+
+
